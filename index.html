@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apollo Guidance Computer Simulator</title>
+  <link rel="stylesheet" href="css/dsky.css">
+  <style>
+    @font-face {
+      font-family: 'DSEG7 Classic';
+      src: url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Regular.woff2') format('woff2');
+      font-weight: normal;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Apollo Guidance Computer Simulator</h1>
+  <p>Comanche 055 (CM) · Luminary 099 (LM) · 1.024 MHz · 15-bit Ones-Complement · 36 Fixed Banks</p>
+</div>
+
+<div class="sim-layout">
+
+  <!-- ================================================================
+       LEFT: DSKY UNIT
+       ================================================================ -->
+  <div class="dsky-col">
+
+    <div class="dsky-unit">
+      <div class="dsky-title">DSKY — Display &amp; Keyboard</div>
+
+      <!-- Warning lights -->
+      <div class="lights-panel">
+        <div class="warning-light" id="light-uplink-acty">UPLINK<br>ACTY</div>
+        <div class="warning-light" id="light-no-att">NO<br>ATT</div>
+        <div class="warning-light" id="light-stby">STBY</div>
+
+        <div class="warning-light" id="light-key-rel">KEY<br>REL</div>
+        <div class="warning-light" id="light-opr-err">OPR<br>ERR</div>
+        <div class="warning-light comp-acty" id="light-comp-acty">COMP<br>ACTY</div>
+
+        <div class="warning-light" id="light-temp">TEMP</div>
+        <div class="warning-light" id="light-gimbal-lock">GIMBAL<br>LOCK</div>
+        <div class="warning-light" id="light-prog">PROG</div>
+
+        <div class="warning-light" id="light-restart">RESTART</div>
+        <div class="warning-light" id="light-tracker">TRACKER</div>
+        <div class="warning-light" id="light-alt">ALT</div>
+
+        <div class="warning-light" id="light-vel" style="grid-column:span 3;max-width:110px;margin:0 auto;">VEL</div>
+      </div>
+
+      <!-- PROG / VERB / NOUN -->
+      <div class="pvn-row">
+        <div class="pvn-block">
+          <div class="pvn-label">PROG</div>
+          <div class="pvn-display" id="prog-display">
+            <span class="seg-digit" data-digit=" "></span>
+            <span class="seg-digit" data-digit=" "></span>
+          </div>
+        </div>
+        <div class="pvn-block">
+          <div class="pvn-label">VERB</div>
+          <div class="pvn-display" id="verb-display">
+            <span class="seg-digit" data-digit=" "></span>
+            <span class="seg-digit" data-digit=" "></span>
+          </div>
+        </div>
+        <div class="pvn-block">
+          <div class="pvn-label">NOUN</div>
+          <div class="pvn-display" id="noun-display">
+            <span class="seg-digit" data-digit=" "></span>
+            <span class="seg-digit" data-digit=" "></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registers R1 / R2 / R3 -->
+      <div class="registers-section">
+        <div class="register-row">
+          <span class="reg-label">R1</span>
+          <div id="reg-r1" style="display:flex;gap:2px;align-items:center;flex:1;">
+            <span class="reg-sign">+</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+          </div>
+          <span class="reg-unit-label" id="reg-label-r1"></span>
+        </div>
+        <div class="register-row">
+          <span class="reg-label">R2</span>
+          <div id="reg-r2" style="display:flex;gap:2px;align-items:center;flex:1;">
+            <span class="reg-sign">+</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+          </div>
+          <span class="reg-unit-label" id="reg-label-r2"></span>
+        </div>
+        <div class="register-row">
+          <span class="reg-label">R3</span>
+          <div id="reg-r3" style="display:flex;gap:2px;align-items:center;flex:1;">
+            <span class="reg-sign">+</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+            <span class="reg-digit" data-digit="0">0</span>
+          </div>
+          <span class="reg-unit-label" id="reg-label-r3"></span>
+        </div>
+      </div>
+
+      <!-- Keyboard -->
+      <div class="keyboard-section">
+        <div class="key-row">
+          <button class="dsky-btn verb-btn" onclick="dskyPress('VERB')">VERB<span class="shortcut">V</span></button>
+          <button class="dsky-btn noun-btn" onclick="dskyPress('NOUN')">NOUN<span class="shortcut">N</span></button>
+          <button class="dsky-btn" onclick="dskyPress('+')">+<span class="shortcut">+</span></button>
+          <button class="dsky-btn" onclick="dskyPress('-')">−<span class="shortcut">-</span></button>
+          <button class="dsky-btn rset-btn" onclick="dskyPress('RSET')">RSET<span class="shortcut">R</span></button>
+        </div>
+        <div class="key-row">
+          <button class="dsky-btn" onclick="dskyPress('7')">7</button>
+          <button class="dsky-btn" onclick="dskyPress('8')">8</button>
+          <button class="dsky-btn" onclick="dskyPress('9')">9</button>
+          <button class="dsky-btn" onclick="dskyPress('CLR')">CLR<span class="shortcut">Esc</span></button>
+          <button class="dsky-btn pro-btn" onclick="dskyPress('PRO')">PRO<span class="shortcut">P</span></button>
+        </div>
+        <div class="key-row">
+          <button class="dsky-btn" onclick="dskyPress('4')">4</button>
+          <button class="dsky-btn" onclick="dskyPress('5')">5</button>
+          <button class="dsky-btn" onclick="dskyPress('6')">6</button>
+          <button class="dsky-btn" onclick="dskyPress('KEYREL')">KEY<br>REL<span class="shortcut">K</span></button>
+          <button class="dsky-btn entr-btn" onclick="dskyPress('ENTR')">ENTR<span class="shortcut">↵</span></button>
+        </div>
+        <div class="key-row">
+          <button class="dsky-btn" onclick="dskyPress('1')">1</button>
+          <button class="dsky-btn" onclick="dskyPress('2')">2</button>
+          <button class="dsky-btn" onclick="dskyPress('3')">3</button>
+          <button class="dsky-btn" onclick="dskyPress('0')">0</button>
+          <div style="min-width:36px;"></div>
+        </div>
+      </div>
+
+      <div class="key-ref">
+        <kbd>V</kbd>=VERB &nbsp;<kbd>N</kbd>=NOUN &nbsp;<kbd>↵</kbd>=ENTR
+        &nbsp;<kbd>Esc</kbd>=CLR &nbsp;<kbd>R</kbd>=RSET &nbsp;<kbd>P</kbd>=PRO
+      </div>
+    </div><!-- /dsky-unit -->
+
+    <!-- AGC Registers (below DSKY) -->
+    <div class="panel-box" style="margin-top:12px;">
+      <h2>AGC Registers (Octal)</h2>
+      <div id="reg-panel"></div>
+    </div>
+
+  </div><!-- /dsky-col -->
+
+  <!-- ================================================================
+       RIGHT: PANELS
+       ================================================================ -->
+  <div class="right-panel">
+
+    <!-- Mission clock + controls -->
+    <div class="panel-box mission-bar">
+      <div class="mission-bar-left">
+        <span id="mission-time" class="mission-clock">GET 000:00:00</span>
+        <span id="mission-status" class="mission-status-text">INITIALIZING...</span>
+      </div>
+      <div class="mission-bar-right">
+        <button class="ctrl-btn" id="btn-pause" onclick="agcUI.togglePause()">⏸ PAUSE</button>
+        <span class="speed-label">Speed:</span>
+        <select class="speed-select" onchange="agcUI.setSpeed(this.value)">
+          <option value="1">1× Real-time</option>
+          <option value="5">5×</option>
+          <option value="30" selected>30×</option>
+          <option value="60">60×</option>
+          <option value="300">300×</option>
+          <option value="900">900×</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── FLIGHT PHASE JUMPER ── -->
+    <div class="panel-box">
+      <h2>Flight Phase — Jump To</h2>
+      <div id="phase-buttons" class="phase-buttons-grid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- ── GUIDED KEYSTROKE TIMELINE ── -->
+    <div class="panel-box guide-box">
+      <h2>Guided Keystroke Timeline</h2>
+      <div id="guide-panel" class="guide-panel">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- VERB/NOUN Reference -->
+    <div class="panel-box">
+      <h2>Verb / Noun Reference</h2>
+      <div class="source-viewer" style="max-height:130px;">
+        <div class="source-line"><span class="src-op">V06 N62</span><span class="src-comment"> — Display orbital parameters</span></div>
+        <div class="source-line"><span class="src-op">V06 N44</span><span class="src-comment"> — Display time of next event</span></div>
+        <div class="source-line"><span class="src-op">V06 N36</span><span class="src-comment"> — Display ground elapsed time</span></div>
+        <div class="source-line"><span class="src-op">V16 N63</span><span class="src-comment"> — Monitor landing descent data</span></div>
+        <div class="source-line"><span class="src-op">V16 N68</span><span class="src-comment"> — Monitor landing radar</span></div>
+        <div class="source-line"><span class="src-op">V37 N00</span><span class="src-comment"> — Change to P00 (Idle)</span></div>
+        <div class="source-line"><span class="src-op">V37 N40</span><span class="src-comment"> — Change to P40 (SPS thrusting)</span></div>
+        <div class="source-line"><span class="src-op">V37 N63</span><span class="src-comment"> — Change to P63 (PDI)</span></div>
+        <div class="source-line"><span class="src-op">V99 N40</span><span class="src-comment"> — Please perform burn</span></div>
+        <div class="source-line"><span class="src-op">V05 N09</span><span class="src-comment"> — Display alarm codes</span></div>
+      </div>
+    </div>
+
+  </div><!-- /right-panel -->
+</div><!-- /sim-layout -->
+
+<!-- Alarm overlay -->
+<div id="alarm-display">
+  <span class="alarm-code">----</span>
+  <span class="alarm-label">PROGRAM ALARM</span>
+</div>
+
+<!-- Scripts -->
+<script src="js/agc-core.js"></script>
+<script src="js/dsky.js"></script>
+<script src="js/executive.js"></script>
+<script src="js/agc-interpreter.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

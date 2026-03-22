@@ -1,0 +1,809 @@
+/* ============================================================
+   Apollo AGC / DSKY Simulator — Visual Styles
+   Base font-size: 20px (125% of 16px default) so the layout
+   looks correct at 100% browser zoom.
+   ============================================================ */
+
+:root {
+  --dsky-bg:        #1a1a1a;
+  --dsky-panel:     #2c2c2c;
+  --dsky-border:    #555;
+  --seg-off:        #1a0d0d;
+  --seg-on:         #ff4400;
+  --seg-green:      #00ff41;
+  --seg-dim:        #3a1a1a;
+  --light-off-bg:   #1e1e1e;
+  --light-on-bg:    #fff8c0;
+  --light-on-color: #222;
+  --btn-bg:         #3a3a3a;
+  --btn-active:     #555;
+  --btn-border:     #666;
+  --btn-text:       #ddd;
+  --panel-text:     #aaa;
+  --accent:         #c8a84b;
+  --font-mono:      'Courier New', 'Lucida Console', monospace;
+}
+
+/* 20px base = 125% of browser default 16px.
+   All rem values scale automatically from here. */
+html { font-size: 20px; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #111;
+  color: #ccc;
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   Page header
+   ============================================================ */
+.page-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.page-header h1 {
+  font-size: 1.25rem;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.page-header p {
+  font-size: 0.6rem;
+  color: #666;
+  margin-top: 4px;
+  letter-spacing: 0.1em;
+}
+
+/* ============================================================
+   Main layout
+   ============================================================ */
+.sim-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 22px;
+  max-width: 1440px;
+  width: 100%;
+  align-items: start;
+}
+
+/* ============================================================
+   Left column (DSKY + registers)
+   ============================================================ */
+.dsky-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ============================================================
+   DSKY Unit
+   ============================================================ */
+.dsky-unit {
+  background: var(--dsky-bg);
+  border: 3px solid #444;
+  border-radius: 8px;
+  padding: 22px;
+  box-shadow:
+    0 0 40px rgba(0,0,0,0.8),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  position: relative;
+}
+
+.dsky-title {
+  text-align: center;
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  color: #666;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   Warning lights panel
+   ============================================================ */
+.lights-panel {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+  background: #111;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #333;
+}
+
+.warning-light {
+  background: var(--light-off-bg);
+  border: 1px solid #333;
+  border-radius: 3px;
+  padding: 5px 4px;
+  font-size: 0.5rem;
+  text-align: center;
+  letter-spacing: 0.05em;
+  color: #444;
+  text-transform: uppercase;
+  transition: background 0.1s, color 0.1s, box-shadow 0.1s;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  user-select: none;
+}
+
+.warning-light.on {
+  background: var(--light-on-bg);
+  color: var(--light-on-color);
+  box-shadow: 0 0 8px rgba(255,240,150,0.6);
+  border-color: #aaa;
+}
+
+.warning-light.comp-acty.on {
+  background: #c8ffc8;
+  box-shadow: 0 0 8px rgba(0,255,0,0.4);
+}
+
+/* ============================================================
+   PROG / VERB / NOUN displays
+   ============================================================ */
+.pvn-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.pvn-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.pvn-label {
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  color: #777;
+  text-transform: uppercase;
+}
+
+.pvn-display {
+  display: flex;
+  gap: 4px;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+/* ============================================================
+   7-Segment digit (PROG / VERB / NOUN)
+   ============================================================ */
+.seg-digit {
+  display: inline-block;
+  width: 28px;
+  height: 46px;
+  position: relative;
+  font-size: 0;
+  background: transparent;
+}
+
+.seg-digit::after {
+  content: attr(data-digit);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DSEG7 Classic', 'Segment7 Standard', var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--seg-on);
+  text-shadow: 0 0 10px rgba(255,68,0,0.8), 0 0 3px rgba(255,68,0,1);
+  letter-spacing: -2px;
+}
+
+.seg-digit.blank::after {
+  color: var(--seg-off);
+  text-shadow: none;
+  content: '8';
+  opacity: 0.08;
+}
+
+/* ============================================================
+   Register displays R1 / R2 / R3
+   ============================================================ */
+.registers-section {
+  margin-bottom: 14px;
+}
+
+.register-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 7px;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  padding: 7px 10px;
+}
+
+.reg-label {
+  font-size: 0.5rem;
+  color: #555;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.reg-sign {
+  width: 25px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: var(--seg-on);
+  text-shadow: 0 0 10px rgba(255,68,0,0.6);
+  flex-shrink: 0;
+}
+
+.reg-digit {
+  width: 30px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DSEG7 Classic', 'Segment7 Standard', var(--font-mono);
+  font-size: 1.85rem;
+  font-weight: bold;
+  color: var(--seg-on);
+  text-shadow: 0 0 10px rgba(255,68,0,0.7), 0 0 3px rgba(255,68,0,1);
+}
+
+.reg-digit:empty::before,
+.reg-digit[data-digit=" "]::before {
+  content: '8';
+  color: var(--seg-off);
+  text-shadow: none;
+  opacity: 0.07;
+}
+
+/* Register unit label (R1/R2/R3 meaning per phase) */
+.reg-unit-label {
+  font-size: 0.42rem;
+  color: #444;
+  text-align: right;
+  max-width: 80px;
+  line-height: 1.25;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+  padding-left: 6px;
+}
+
+/* ============================================================
+   Keyboard
+   ============================================================ */
+.keyboard-section {
+  margin-top: 16px;
+}
+
+.key-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.dsky-btn {
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  border-radius: 5px;
+  color: var(--btn-text);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  padding: 9px 5px;
+  min-width: 45px;
+  text-align: center;
+  text-transform: uppercase;
+  transition: background 0.08s, box-shadow 0.08s, transform 0.05s;
+  user-select: none;
+  box-shadow: 0 3px 0 #222, 0 4px 5px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+.dsky-btn:hover {
+  background: #484848;
+  box-shadow: 0 3px 0 #111, 0 4px 5px rgba(0,0,0,0.5), 0 0 6px rgba(200,168,75,0.2);
+}
+
+.dsky-btn:active, .dsky-btn.pressed {
+  background: var(--btn-active);
+  box-shadow: 0 0 0 #222, 0 1px 2px rgba(0,0,0,0.5);
+  transform: translateY(2px);
+}
+
+.dsky-btn.verb-btn  { background: #1a2a1a; border-color: #4a7a4a; color: #80d080; }
+.dsky-btn.noun-btn  { background: #1a1a2a; border-color: #4a4a7a; color: #8080d0; }
+.dsky-btn.entr-btn  { background: #2a1a1a; border-color: #7a4a4a; color: #d08080; min-width: 68px; }
+.dsky-btn.rset-btn  { background: #2a1a00; border-color: #7a5a00; color: #d0a060; }
+.dsky-btn.pro-btn   { background: #2a2a1a; border-color: #7a7a4a; color: #d0d080; min-width: 68px; }
+
+.dsky-btn .shortcut {
+  font-size: 0.38rem;
+  color: #555;
+  display: block;
+  margin-top: 2px;
+}
+
+.key-ref {
+  font-size: 0.48rem;
+  color: #444;
+  margin-top: 10px;
+  text-align: center;
+  line-height: 2;
+}
+
+.key-ref kbd {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 2px;
+  padding: 1px 5px;
+  color: #888;
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   Right panel
+   ============================================================ */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-box {
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.panel-box h2 {
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 6px;
+}
+
+/* ============================================================
+   Mission bar
+   ============================================================ */
+.mission-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+}
+
+.mission-bar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mission-clock {
+  font-size: 1.05rem;
+  color: #00ff41;
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 8px rgba(0,255,65,0.4);
+}
+
+.mission-status-text {
+  font-size: 0.55rem;
+  color: #888;
+  letter-spacing: 0.06em;
+  max-width: 440px;
+}
+
+.mission-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ctrl-btn {
+  background: #222;
+  border: 1px solid #444;
+  color: #aaa;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 3px;
+  letter-spacing: 0.1em;
+  transition: background 0.1s;
+}
+.ctrl-btn:hover { background: #333; color: #fff; }
+
+.speed-label { font-size: 0.55rem; color: #666; }
+
+select.speed-select {
+  background: #222;
+  border: 1px solid #444;
+  color: #aaa;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  padding: 5px 8px;
+  border-radius: 3px;
+}
+
+/* ============================================================
+   AGC Registers panel
+   ============================================================ */
+#reg-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+}
+
+.reg-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.58rem;
+  padding: 3px 0;
+  border-bottom: 1px solid #1e1e1e;
+  color: #888;
+}
+
+.reg-row span:last-child {
+  color: #00ff41;
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   Verb/Noun reference viewer
+   ============================================================ */
+.source-viewer {
+  font-size: 0.55rem;
+  color: #666;
+  max-height: 180px;
+  overflow-y: auto;
+  line-height: 1.7;
+  scrollbar-width: thin;
+  scrollbar-color: #333 #111;
+}
+
+.source-line {
+  display: flex;
+  gap: 12px;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.source-line.active { background: #1a2a1a; color: #00ff41; }
+.src-addr    { color: #444; min-width: 50px; }
+.src-label   { color: #5a7a5a; min-width: 80px; }
+.src-op      { color: #7a7a4a; min-width: 70px; }
+.src-comment { color: #3a3a3a; }
+
+/* ============================================================
+   Alarm overlay
+   ============================================================ */
+#alarm-display {
+  display: none;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #1a0000;
+  border: 2px solid #ff0000;
+  border-radius: 6px;
+  padding: 14px 24px;
+  z-index: 100;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(255,0,0,0.4);
+  animation: alarmPulse 0.5s ease infinite alternate;
+}
+
+.alarm-code {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ff2200;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px rgba(255,34,0,0.8);
+}
+
+.alarm-label {
+  display: block;
+  font-size: 0.55rem;
+  color: #ff8888;
+  letter-spacing: 0.15em;
+  margin-top: 4px;
+}
+
+@keyframes alarmPulse {
+  from { box-shadow: 0 0 20px rgba(255,0,0,0.3); }
+  to   { box-shadow: 0 0 40px rgba(255,0,0,0.7); }
+}
+
+/* ============================================================
+   Flight Phase Jump Buttons
+   ============================================================ */
+.phase-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 7px;
+}
+
+.phase-btn {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #777;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  padding: 9px 10px;
+  text-align: left;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.phase-btn:hover {
+  background: #242424;
+  border-color: #555;
+  color: #bbb;
+}
+
+.phase-btn.active {
+  background: #0d1a0d;
+  border-color: #2a6a2a;
+  color: #00ff41;
+  box-shadow: 0 0 8px rgba(0,255,65,0.15);
+}
+
+.phase-btn-label {
+  font-size: 0.62rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.phase-btn-sub {
+  font-size: 0.48rem;
+  color: #555;
+  font-family: var(--font-mono);
+}
+
+.phase-btn.active .phase-btn-sub { color: #2a8a2a; }
+
+/* ============================================================
+   Guided Keystroke Timeline
+   ============================================================ */
+.guide-box { padding-bottom: 10px; }
+
+.guide-panel {
+  max-height: 420px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #333 #111;
+}
+
+.guide-phase-name {
+  font-size: 0.56rem;
+  color: var(--accent);
+  letter-spacing: 0.07em;
+  margin-bottom: 4px;
+  line-height: 1.45;
+}
+
+.guide-progress {
+  font-size: 0.5rem;
+  color: #555;
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+}
+
+.guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.guide-step {
+  border-radius: 4px;
+  padding: 8px 11px;
+  border: 1px solid transparent;
+  transition: background 0.15s;
+}
+
+.guide-step.done   { background: #0d150d; border-color: #1a2e1a; opacity: 0.7; }
+.guide-step.active { background: #0a1a0a; border-color: #2a5a2a; box-shadow: 0 0 10px rgba(0,255,65,0.08); }
+.guide-step.future { background: #111; border-color: #1e1e1e; opacity: 0.5; }
+
+.guide-step-header {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 5px;
+}
+
+.guide-step-num {
+  font-size: 0.5rem;
+  color: #555;
+  min-width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.guide-step.done .guide-step-num   { color: #2a8a2a; }
+.guide-step.active .guide-step-num { color: #00ff41; }
+
+.guide-step-cue {
+  font-size: 0.6rem;
+  color: #aaa;
+  letter-spacing: 0.04em;
+}
+
+.guide-step.active .guide-step-cue { color: #ddd; font-weight: bold; }
+.guide-step.done   .guide-step-cue { color: #3a6a3a; text-decoration: line-through; }
+
+/* Key sequence */
+.guide-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 7px 0 6px 24px;
+  align-items: center;
+}
+
+.gkey {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  border: 1px solid;
+  min-width: 32px;
+  text-align: center;
+}
+
+.gkey.num     { background: #1a1a2a; border-color: #3a3a6a; color: #8888ee; box-shadow: 0 2px 0 #111; }
+.gkey.special { background: #1a2a1a; border-color: #3a6a3a; color: #88ee88; box-shadow: 0 2px 0 #111; font-size: 0.54rem; padding: 5px 7px; }
+
+.guide-keys.auto { opacity: 0.7; }
+
+.gkey-auto {
+  font-size: 0.5rem;
+  color: #666;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  padding: 3px 9px;
+  letter-spacing: 0.1em;
+}
+
+.guide-keys .gkey + .gkey::before {
+  content: '→';
+  color: #333;
+  font-size: 0.55rem;
+  margin-right: 5px;
+  font-weight: normal;
+}
+
+.guide-purpose {
+  font-size: 0.54rem;
+  color: #777;
+  margin: 4px 0 4px 24px;
+  line-height: 1.55;
+}
+
+.guide-expected {
+  font-size: 0.5rem;
+  color: #555;
+  margin: 3px 0 7px 24px;
+}
+
+.guide-expected code {
+  background: #0d1a0d;
+  border: 1px solid #1e3a1e;
+  border-radius: 3px;
+  padding: 1px 6px;
+  color: #00aa30;
+  font-size: 0.55rem;
+  font-family: var(--font-mono);
+}
+
+.guide-advance-btn {
+  display: block;
+  margin: 7px 0 0 24px;
+  background: #0d2a0d;
+  border: 1px solid #2a6a2a;
+  border-radius: 4px;
+  color: #00cc44;
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  padding: 5px 14px;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: background 0.1s;
+}
+
+.guide-advance-btn:hover {
+  background: #113311;
+  border-color: #3a8a3a;
+  color: #00ff55;
+}
+
+.guide-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #1a1a1a;
+}
+
+.guide-nav-btn {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 3px;
+  color: #666;
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  padding: 5px 12px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.guide-nav-btn:hover { color: #aaa; border-color: #555; }
+
+/* ============================================================
+   Scrollbar
+   ============================================================ */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 980px) {
+  .sim-layout {
+    grid-template-columns: 1fr;
+  }
+  .dsky-col {
+    max-width: 440px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .phase-buttons-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
