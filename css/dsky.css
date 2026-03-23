@@ -8,10 +8,10 @@
   --dsky-bg:        #1a1a1a;
   --dsky-panel:     #2c2c2c;
   --dsky-border:    #555;
-  --seg-off:        #1a0d0d;
-  --seg-on:         #ff4400;
+  --seg-off:        #040e10;
+  --seg-on:         #00e0c8;
   --seg-green:      #00ff41;
-  --seg-dim:        #3a1a1a;
+  --seg-dim:        #082020;
   --light-off-bg:   #1e1e1e;
   --light-on-bg:    #fff8c0;
   --light-on-color: #222;
@@ -179,8 +179,8 @@ body {
 .pvn-display {
   display: flex;
   gap: 4px;
-  background: #0d0d0d;
-  border: 1px solid #333;
+  background: #050e0e;
+  border: 1px solid #0d2828;
   border-radius: 4px;
   padding: 6px 10px;
 }
@@ -208,7 +208,7 @@ body {
   font-size: 1.8rem;
   font-weight: bold;
   color: var(--seg-on);
-  text-shadow: 0 0 10px rgba(255,68,0,0.8), 0 0 3px rgba(255,68,0,1);
+  text-shadow: 0 0 10px rgba(0,224,200,0.8), 0 0 3px rgba(0,224,200,1);
   letter-spacing: -2px;
 }
 
@@ -231,8 +231,8 @@ body {
   align-items: center;
   gap: 4px;
   margin-bottom: 7px;
-  background: #0d0d0d;
-  border: 1px solid #2a2a2a;
+  background: #050e0e;
+  border: 1px solid #0d2828;
   border-radius: 4px;
   padding: 7px 10px;
 }
@@ -255,7 +255,7 @@ body {
   font-size: 1.7rem;
   font-weight: bold;
   color: var(--seg-on);
-  text-shadow: 0 0 10px rgba(255,68,0,0.6);
+  text-shadow: 0 0 10px rgba(0,224,200,0.6);
   flex-shrink: 0;
 }
 
@@ -269,7 +269,7 @@ body {
   font-size: 1.85rem;
   font-weight: bold;
   color: var(--seg-on);
-  text-shadow: 0 0 10px rgba(255,68,0,0.7), 0 0 3px rgba(255,68,0,1);
+  text-shadow: 0 0 10px rgba(0,224,200,0.7), 0 0 3px rgba(0,224,200,1);
 }
 
 .reg-digit:empty::before,
