@@ -289,7 +289,7 @@ class MissionSimulator {
     this.alarmFired = {};
   }
 
-  update(simTime) {
+  update(simTime, pinball) {
     const phase = this._phaseAtTick(simTime);
     const next  = this._nextPhase(phase);
 
@@ -298,11 +298,6 @@ class MissionSimulator {
     const t1 = next ? next.get : t0 + 3600;
     const t  = t1 > t0 ? Math.min(1, (simTime - t0) / (t1 - t0)) : 0;
 
-    const r1v = phase.r1 + ((next?.r1 ?? phase.r1) - phase.r1) * t;
-    const r2v = phase.r2 + ((next?.r2 ?? phase.r2) - phase.r2) * t;
-    const r3v = phase.r3 + ((next?.r3 ?? phase.r3) - phase.r3) * t;
-
-    // Add sensor noise
     const noise = (v) => v !== 0 ? v * (1 + (Math.random() - 0.5) * 0.0008) : 0;
 
     // 1202 alarm during alarm phase
@@ -316,20 +311,62 @@ class MissionSimulator {
       }, 4000);
     }
 
-    this.dsky.setDisplay({
-      prog:   phase.prog,
-      verb:   phase.verb,
-      noun:   phase.noun,
-      r1:     this._fmt(noise(r1v)),
-      r2:     this._fmt(noise(r2v)),
-      r3:     this._fmt(noise(r3v)),
-      lights: {
-        ...phase.lights,
-        COMP_ACTY: (simTime % 25 < 8),
-      },
-    });
+    if (pinball && pinball.userControlled) {
+      // ── USER has taken control via VERB/NOUN entry ──
+      // Only update R1/R2/R3 with noun-appropriate telemetry.
+      // Verb / Noun / Prog displays are NOT overridden.
+      const noun = parseInt(pinball.activeNoun, 10);
+      const { r1v, r2v, r3v } = this._dataNoun(noun, phase, t, next, simTime);
+      this.dsky.setDisplay({
+        r1: this._fmt(noise(r1v)),
+        r2: this._fmt(noise(r2v)),
+        r3: this._fmt(noise(r3v)),
+        lights: { COMP_ACTY: (simTime % 25 < 8) },
+      });
+      // Keep pinball in sync with the running phase data
+      pinball.syncPhase(phase.verb, phase.noun, phase.prog);
+    } else {
+      // ── AUTO mode — mission simulator drives everything ──
+      const r1v = phase.r1 + ((next?.r1 ?? phase.r1) - phase.r1) * t;
+      const r2v = phase.r2 + ((next?.r2 ?? phase.r2) - phase.r2) * t;
+      const r3v = phase.r3 + ((next?.r3 ?? phase.r3) - phase.r3) * t;
+
+      this.dsky.setDisplay({
+        prog:   phase.prog,
+        verb:   phase.verb,
+        noun:   phase.noun,
+        r1:     this._fmt(noise(r1v)),
+        r2:     this._fmt(noise(r2v)),
+        r3:     this._fmt(noise(r3v)),
+        lights: { ...phase.lights, COMP_ACTY: (simTime % 25 < 8) },
+      });
+      if (pinball) pinball.syncPhase(phase.verb, phase.noun, phase.prog);
+    }
 
     return phase;
+  }
+
+  // Map noun → { r1v, r2v, r3v } using current phase telemetry
+  _dataNoun(noun, phase, t, next, simTime) {
+    const lerp = (a, b) => a + ((b ?? a) - a) * t;
+    const r1 = lerp(phase.r1, next?.r1);
+    const r2 = lerp(phase.r2, next?.r2);
+    const r3 = lerp(phase.r3, next?.r3);
+
+    switch (noun) {
+      case  9: return { r1v: 1202,      r2v: 0,   r3v: 0  };   // alarm code
+      case 36: return { r1v: simTime * 100, r2v: 0, r3v: 0 };   // GET in csec
+      case 42: return { r1v: r3 * 1.1,  r2v: r3 * 0.9, r3v: 0  }; // apogee/perigee approx
+      case 43: return { r1v: r3,         r2v: r2,       r3v: 0  }; // alt / alt-rate
+      case 44: return { r1v: r1,         r2v: 0,        r3v: 0  }; // time of event
+      case 59: return { r1v: r2,         r2v: r3,       r3v: 0  }; // alt rate / alt
+      case 61: return { r1v: r1,         r2v: r2,       r3v: r3 }; // entry
+      case 62: return { r1v: r1,         r2v: r2,       r3v: r3 }; // orbital
+      case 63: return { r1v: r1,         r2v: r2,       r3v: r3 }; // PDI
+      case 64: return { r1v: r1,         r2v: r2,       r3v: r3 }; // approach
+      case 68: return { r1v: r1,         r2v: r2,       r3v: 0  }; // landing radar
+      default: return { r1v: r1,         r2v: r2,       r3v: r3 };
+    }
   }
 
   _phaseAtTick(simTime) {
@@ -433,12 +470,11 @@ class AGCUI {
     this.interpreter = new AGCInterpreter(this.agc);
     this.mission     = new MissionSimulator(this.dsky);
     this.guide       = new GuideTracker();
+    this.pinball     = new Pinball(this.dsky);   // ← PINBALL state machine
 
     this.simTime     = 0;   // float seconds — drives all interpolation at frame rate
     this.simSpeed    = 30;
     this.paused      = false;
-    this.inputBuffer = '';
-    this.inputMode   = null;
     this.currentPhase = FLIGHT_PHASES[0];
 
     window.agcUI = this;
@@ -478,7 +514,7 @@ class AGCUI {
           this.agc.runCycles(8);
         }
         // Pass the float time — MissionSimulator interpolates R1/R2/R3 every frame
-        const phase = this.mission.update(this.simTime);
+        const phase = this.mission.update(this.simTime, this.pinball);
 
         // Auto-detect phase change
         if (phase.id !== this.currentPhase.id) {
@@ -505,6 +541,15 @@ class AGCUI {
     this.guide.setPhase(phaseId);
     this._highlightPhaseButton(phaseId);
     this.mission.alarmFired = {};
+    // Reset PINBALL to auto mode when jumping phases
+    this.pinball.userControlled = false;
+    this.pinball.state = 'IDLE';
+    this.pinball.verbBuf = '';
+    this.pinball.nounBuf = '';
+    this.pinball.pendingVerb = null;
+    this.pinball.proAction = null;
+    this.dsky.verbFlash = false;
+    this.dsky.nounFlash = false;
     this._renderMissionStatus(phase);
   }
 
@@ -712,60 +757,21 @@ class AGCUI {
   }
 
   _dskyKey(key) {
+    // Flash COMP ACTY light briefly
     const compLight = document.getElementById('light-comp-acty');
     if (compLight) {
       compLight.classList.add('on');
       setTimeout(() => compLight.classList.remove('on'), 150);
     }
 
-    if (key === 'VERB') {
-      this.inputMode = 'verb'; this.inputBuffer = '';
-    } else if (key === 'NOUN') {
-      this.inputMode = 'noun'; this.inputBuffer = '';
-    } else if (key === 'ENTR') {
-      this._handleENTR();
-    } else if (key === 'CLR') {
-      this.inputBuffer = '';
-    } else if (key === 'RSET') {
-      this._handleRSET();
-      this.guide.markDone();
-    } else if (key === 'PRO') {
-      this._handlePRO();
-    } else if (key === 'KEYREL') {
-      this.dsky.setDisplay({ lights: { KEY_REL: false } });
-    } else if ((key >= '0' && key <= '9') || key === '+' || key === '-') {
-      this.inputBuffer += key;
-      this._updateInputDisplay();
-    }
+    // ── PINBALL handles the full VERB/NOUN state machine ──
+    this.pinball.onKey(key);
 
+    // ── Send hardware keycode to AGC via KEYRUPT ──
     this.dsky.pressKey(key);
-  }
 
-  _updateInputDisplay() {
-    const buf = this.inputBuffer;
-    if (this.inputMode === 'verb') {
-      this.dsky.setDisplay({ verb: buf.padStart(2,'0').slice(-2) });
-    } else if (this.inputMode === 'noun') {
-      this.dsky.setDisplay({ noun: buf.padStart(2,'0').slice(-2) });
-    }
-  }
-
-  _handleENTR() {
-    const val = parseInt(this.inputBuffer, 10) || 0;
-    if (this.inputMode === 'verb') {
-      if (val === 99) this.dsky.setDisplay({ lights: { KEY_REL: true } });
-      else if (val === 37) this.dsky.setDisplay({ lights: { KEY_REL: true } });
-    }
-    this.inputMode = null;
-    this.inputBuffer = '';
-  }
-
-  _handleRSET() {
-    this.dsky.setDisplay({ lights: { OPR_ERR: false, RESTART: false, KEY_REL: false, TRACKER: false } });
-  }
-
-  _handlePRO() {
-    this.dsky.setDisplay({ lights: { KEY_REL: false } });
+    // Guide auto-advance on RSET
+    if (key === 'RSET') this.guide.markDone();
   }
 
   showAlarm(code, label) {
